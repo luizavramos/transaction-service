@@ -1,0 +1,12 @@
+* text=auto
+
+# Scripts executados em Linux/containers: sempre LF
+*.sh   text eol=lf
+mvnw   text eol=lf
+
+# Scripts Windows: sempre CRLF
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+
+*.jar  binary
+*.png  binary

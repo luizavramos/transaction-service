@@ -1,0 +1,25 @@
+# Build
+target/
+*.class
+*.log
+dependency-reduced-pom.xml
+
+# Maven Wrapper: o jar é baixado sob demanda (distributionType=only-script)
+.mvn/wrapper/maven-wrapper.jar
+
+# Ambiente local (copiar de .env.example)
+.env
+
+# Estado local de serviços (RocksDB, snapshots de regras)
+data/
+*.rocksdb/
+
+# IDEs e SO
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.DS_Store
+Thumbs.db
