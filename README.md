@@ -6,14 +6,17 @@ Carga inicial (**backfill**) de 90 dias de histórico de transações, do banco 
 cdc.bank.transactions ─► só op=r (snapshot) e occurredAt em [cutoverAt − 90 d, cutoverAt) ─► campos permitidos ─► transaction-history-backfill.v1
 ```
 
-**Estado:** em implementação (spec 006, Fases 1 e 2: módulo, conector, seed, janela de 90 dias e mapeamento do Debezium). Topologia, status e a prova com o motor vêm nas próximas fases; este README ganha o procedimento de refazer a carga (H3) ao fim.
+**Estado:** em implementação (spec 006, Fases 1 a 3: módulo, conector, seed, janela de 90 dias, mapeamento do Debezium, topologia e status). A prova com o motor vem nas próximas fases; este README ganha o procedimento de refazer a carga (H3) ao fim.
 
 ## Configuração
 
 | Variável | Padrão | Para quê |
 |---|---|---|
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | brokers |
-| `HTTP_PORT` | `8080` (no compose: `8086`) | saúde, métricas e `/v1/backfill/status` |
+| `HTTP_PORT` | `8080` (no compose: `8086`) | saúde (`/actuator/health`) e métricas (`/actuator/prometheus`) |
+| `STATUS_PORT` | `8096` | `GET /v1/backfill/status` (porta própria: o servidor de saúde é compartilhado e não aceita rotas novas) |
+| `BACKFILL_RATE_PER_SECOND` | `20000` | limite de publicação; o consumo do CDC anda nessa velocidade |
+| `BACKFILL_COMPLETION_QUIET_SECONDS` | `10` | silêncio sem eventos, depois do `snapshot=last`, para declarar `COMPLETED` (o tópico tem 3 partições) |
 | `STATE_DIR` | `/data` | diretório de estado do Kafka Streams |
 | `CUTOVER_AT` | sem padrão, **obrigatório** | instante de corte, ISO-8601 em UTC; só entram transações com `occurredAt` antes dele |
 

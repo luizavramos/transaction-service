@@ -53,6 +53,18 @@ class BackfillTransactionHistoryUseCaseTest {
     }
 
     @Test
+    @DisplayName("valor zero ou negativo no legado é registro inválido: não vira mensagem fora do contrato")
+    void valorInvalido() {
+        var zero = new TransactionChange("r", false,
+                new HistoryRecord("txn_1", "acc_1", 0L, "acc_2", "dev_1", CUTOVER.minus(Duration.ofDays(1))));
+        var negativo = new TransactionChange("r", false,
+                new HistoryRecord("txn_1", "acc_1", -10L, "acc_2", "dev_1", CUTOVER.minus(Duration.ofDays(1))));
+
+        assertThat(useCase.evaluate(zero).skipReason()).isEqualTo(SkipReason.INVALID_RECORD);
+        assertThat(useCase.evaluate(negativo).skipReason()).isEqualTo(SkipReason.INVALID_RECORD);
+    }
+
+    @Test
     @DisplayName("c, u e d não são backfill: o histórico só vem do snapshot; a mudança em dia chega pelo fluxo normal")
     void ignoraOutrasOperacoes() {
         for (var op : new String[] {"c", "u"}) {

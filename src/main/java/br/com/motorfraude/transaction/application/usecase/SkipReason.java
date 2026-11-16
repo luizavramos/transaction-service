@@ -6,7 +6,10 @@ public enum SkipReason {
     NOT_SNAPSHOT("not_snapshot"),
 
     /** Leitura do snapshot fora de [cutoverAt − 90 dias, cutoverAt). */
-    OUT_OF_WINDOW("out_of_window");
+    OUT_OF_WINDOW("out_of_window"),
+
+    /** Leitura do snapshot que não cabe no contrato (valor zero ou negativo). */
+    INVALID_RECORD("invalid_record");
 
     private final String label;
 

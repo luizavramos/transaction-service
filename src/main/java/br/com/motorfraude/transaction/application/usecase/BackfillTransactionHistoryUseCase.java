@@ -24,6 +24,9 @@ public final class BackfillTransactionHistoryUseCase {
         if (!"r".equals(change.op()) || change.record() == null) {
             return new Outcome(null, SkipReason.NOT_SNAPSHOT);
         }
+        if (change.record().amountCents() <= 0) {
+            return new Outcome(null, SkipReason.INVALID_RECORD);
+        }
         if (!window.contains(change.record().occurredAt())) {
             return new Outcome(null, SkipReason.OUT_OF_WINDOW);
         }
