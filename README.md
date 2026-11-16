@@ -6,7 +6,7 @@ Carga inicial (**backfill**) de 90 dias de histórico de transações, do banco 
 cdc.bank.transactions ─► só op=r (snapshot) e occurredAt em [cutoverAt − 90 d, cutoverAt) ─► campos permitidos ─► transaction-history-backfill.v1
 ```
 
-**Estado:** em implementação (spec 006, Fase 1: módulo, regra de arquitetura, conector e seed). Domínio, topologia, status e a prova com o motor vêm nas próximas fases; este README ganha o procedimento de refazer a carga (H3) ao fim.
+**Estado:** em implementação (spec 006, Fases 1 e 2: módulo, conector, seed, janela de 90 dias e mapeamento do Debezium). Topologia, status e a prova com o motor vêm nas próximas fases; este README ganha o procedimento de refazer a carga (H3) ao fim.
 
 ## Configuração
 
