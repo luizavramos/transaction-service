@@ -6,7 +6,7 @@ Carga inicial (**backfill**) de 90 dias de histórico de transações, do banco 
 cdc.bank.transactions ─► só op=r (snapshot) e occurredAt em [cutoverAt − 90 d, cutoverAt) ─► campos permitidos ─► transaction-history-backfill.v1
 ```
 
-**Estado:** implementado (spec 006, Fases 1 a 4). Provado com Postgres, Kafka e Debezium reais (10 mil transações, nada fora da janela, nada de dado pessoal) e, no `detection-engine`, contra o cálculo em SQL (ver "O que está provado"). Não medido: o limite de 20 mil registros/s contra um motor sob tráfego ao vivo.
+**Estado:** implementado (spec 006, Fases 1 a 4). Provado com Postgres, Kafka e Debezium reais (10 mil transações, nada fora da janela, nada de dado pessoal) e, no `detection-engine`, contra o cálculo em SQL (ver "O que está provado"). Ensaiado no compose com o motor de pé (limitador a 2 mil/s, reset do motor). Não medido: o limite padrão de 20 mil registros/s contra um motor sob tráfego ao vivo e a latência do motor em ambiente representativo.
 
 ## Configuração
 
@@ -54,7 +54,8 @@ Quando refazer: o motor foi recriado, o estado dele foi perdido, ou a carga term
 
 Limites conhecidos:
 - O tópico `transaction-history-backfill.v1` guarda 7 dias. Passado isso, só refazendo o snapshot (passo 3) o motor recebe o histórico de novo.
-- Os passos de B (reset do motor, novo conector) **não foram executados de ponta a ponta** aqui; o que foi provado está em "O que está provado". Faça o primeiro ensaio num ambiente que não seja o de produção.
+- O passo 2 de B (reset do motor com o tópico de histórico já com cópias duplicadas) foi ensaiado no compose e bateu com o SQL em 100 contas (ver "O que está provado"); o passo 3 (conector novo com slot novo) foi exercitado à parte. Faça o primeiro ensaio num ambiente que não seja o de produção.
+- Se o `transaction-service` morrer no meio de uma transação do Kafka, o aborto pode ficar inacabado (`PrepareAbort`) e travar a partição para quem lê só dados confirmados, como o motor: o atraso daquela partição para de cair. Em desenvolvimento, `kafka-transactions.sh describe-producers` mostra o início da transação aberta e `kafka-transactions.sh abort --start-offset` a fecha, descartando aquelas mensagens. Em produção, refaça a carga pelo H3.
 
 ## O que está provado
 
@@ -64,6 +65,7 @@ Limites conhecidos:
 | Status e métricas depois da carga | mesmo teste: `COMPLETED`, `published` e `out_of_window` conferidos contra o SQL |
 | `avgAmount30d` de 100 contas igual ao SQL (SC-001) | teste no `detection-engine` que alimenta a topologia real com os registros produzidos por este serviço (fixture gerada pelo `TransactionServiceIT`) |
 | Transporte no compose, com Debezium real e 1 milhão de linhas | 750.082 publicadas (as da janela, iguais ao SQL), 249.918 fora, `COMPLETED`; o tópico lido com `read_committed` tem 750.082 mensagens e ids distintos, sem nome nem CPF |
+| Motor sob carga, limitador a 2 mil/s, H3-B | compose com 500 mil linhas: `COMPLETED` com 374.976 publicados e 125.024 fora da janela; motor acompanhando com tráfego ao vivo; depois do reset do motor, 100 contas conferidas contra o SQL com 0 diferenças (`infra/backfill-verify.sh` no repositório do compose) |
 | Janela, mapeamento, estado e topologia | testes unitários e de `TopologyTestDriver`, com fixtures reais do Debezium 3.6.3 |
 
 ## Build e testes
