@@ -22,7 +22,6 @@ public final class TransactionServiceApp {
     }
 
     static void run(Map<String, String> env) {
-        // falha rápida: sem CUTOVER_AT válido o processo nem chega a abrir portas ou falar com o Kafka
         var backfill = BackfillSettings.fromEnvironment(env);
         var settings = StreamsSettings.fromEnvironment(APPLICATION_ID, env);
         var status = new BackfillStatus(backfill.cutoverAt(), Clock.systemUTC(), Path.of(settings.stateDir().toString(), STATUS_FILE),

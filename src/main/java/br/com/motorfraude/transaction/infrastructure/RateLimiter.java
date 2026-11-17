@@ -4,11 +4,6 @@ import java.util.concurrent.locks.LockSupport;
 import java.util.function.LongConsumer;
 import java.util.function.LongSupplier;
 
-/**
- * Balde de fichas: repõe {@code permitsPerSecond} fichas por segundo, até {@code burst}. {@link #acquire()} bloqueia a
- * thread quando o balde esvazia, o que na topologia faz o consumo do tópico de origem andar na velocidade do limite
- * (o motor não é inundado de histórico enquanto atende o tráfego ao vivo).
- */
 public final class RateLimiter {
 
     private final double permitsPerNano;

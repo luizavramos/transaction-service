@@ -1,6 +1,5 @@
 CREATE SCHEMA bank;
 
--- Igual a infra/bank-db/init.sql do compose (spec 000), sem os dados sintéticos.
 CREATE TABLE bank.transactions (
     transaction_id     text PRIMARY KEY,
     account_token      text        NOT NULL,

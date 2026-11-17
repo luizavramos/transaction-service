@@ -9,10 +9,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
-/**
- * Serve só {@code GET /v1/backfill/status}. Fica numa porta própria porque o servidor de saúde e métricas do
- * {@code platform-streams} é compartilhado e não tem ponto de extensão para rotas do serviço.
- */
 public final class StatusServer implements AutoCloseable {
 
     public static final String PATH = "/v1/backfill/status";

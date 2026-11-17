@@ -17,10 +17,6 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Topologia sem estado: lê o CDC das transações, deixa passar só o snapshot dentro da janela e publica a chave
- * {@code accountId}, a mesma do motor (o tópico de destino é co-particionado com o dele).
- */
 public final class TopologyFactory {
 
     public static final String SOURCE_TOPIC = "cdc.bank.transactions";
@@ -51,7 +47,6 @@ public final class TopologyFactory {
                             metrics.skipped(outcome.skipReason());
                             status.skipped(outcome.skipReason());
                         }
-                        // o fim do snapshot conta mesmo quando o último registro cai fora da janela
                         if (change.lastOfSnapshot()) {
                             status.snapshotCompleted();
                         }

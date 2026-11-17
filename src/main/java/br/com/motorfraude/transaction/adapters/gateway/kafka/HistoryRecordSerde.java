@@ -8,7 +8,6 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
 
-/** Grava o registro no contrato transaction-history-record.v1 (centavos em BRL; sem dispositivo o campo some). */
 public final class HistoryRecordSerde implements Serde<HistoryRecord> {
 
     private static final String CURRENCY = "BRL";

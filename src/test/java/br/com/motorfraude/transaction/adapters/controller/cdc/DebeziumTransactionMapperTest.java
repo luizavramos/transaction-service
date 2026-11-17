@@ -10,7 +10,6 @@ import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** As fixtures são eventos reais do Debezium 3.6.3 capturados do banco legado (compose da spec 006). */
 class DebeziumTransactionMapperTest {
 
     static String fixture(String name) {

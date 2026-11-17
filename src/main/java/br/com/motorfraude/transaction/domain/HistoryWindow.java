@@ -4,10 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
-/**
- * Janela de histórico do backfill: de {@code cutoverAt − 90 dias} (incluído) até {@code cutoverAt} (excluído).
- * O que acontece a partir do corte chega ao motor pelo fluxo normal, então o backfill não pode repetir.
- */
 public record HistoryWindow(Instant cutoverAt) {
 
     public static final Duration LENGTH = Duration.ofDays(90);

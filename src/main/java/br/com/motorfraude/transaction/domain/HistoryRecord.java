@@ -3,10 +3,6 @@ package br.com.motorfraude.transaction.domain;
 import java.time.Instant;
 import java.util.Objects;
 
-/**
- * Transação do histórico, só com os campos que o motor precisa. Não há campo para nome nem CPF do pagador:
- * o que não existe aqui não tem como vazar.
- */
 public record HistoryRecord(
         String transactionId,
         String accountId,

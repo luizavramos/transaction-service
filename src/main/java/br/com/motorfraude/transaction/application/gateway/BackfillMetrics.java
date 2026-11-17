@@ -8,6 +8,5 @@ public interface BackfillMetrics {
 
     void skipped(SkipReason reason);
 
-    /** Evento do CDC que não deu para ler (JSON inválido ou campo obrigatório ausente). */
     void malformed();
 }

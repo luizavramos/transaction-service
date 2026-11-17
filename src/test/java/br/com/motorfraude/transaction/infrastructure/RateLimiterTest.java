@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 class RateLimiterTest {
 
-    /** Relógio falso: dormir apenas avança o tempo, sem esperar de verdade. */
     private static final class FakeTime {
         long nanos;
 

@@ -4,7 +4,6 @@ import br.com.motorfraude.transaction.domain.HistoryRecord;
 import br.com.motorfraude.transaction.domain.HistoryWindow;
 import java.util.Objects;
 
-/** Decide se um evento do CDC vira registro de histórico: só leitura do snapshot dentro da janela. */
 public final class BackfillTransactionHistoryUseCase {
 
     public record Outcome(HistoryRecord record, SkipReason skipReason) {

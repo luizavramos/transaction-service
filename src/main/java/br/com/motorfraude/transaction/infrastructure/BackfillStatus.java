@@ -16,15 +16,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Andamento da carga: RUNNING até o fim do snapshot, depois COMPLETED.
- *
- * <p>O tópico de origem tem várias partições, então o evento {@code snapshot=last} pode ser processado antes de
- * registros de outra partição. Por isso COMPLETED exige o último evento visto <b>e</b> uma janela de silêncio sem
- * nenhum evento novo; um retardatário volta o estado para RUNNING. Os totais ficam na memória e valem desde a partida
- * do processo; ao completar, o resultado é gravado em arquivo para que um reinício não volte a RUNNING (o evento
- * {@code last} não chega de novo, porque o offset já foi confirmado).
- */
 public final class BackfillStatus {
 
     private static final Logger LOG = LoggerFactory.getLogger(BackfillStatus.class);
@@ -52,7 +43,6 @@ public final class BackfillStatus {
     private Snapshot restored;
     private boolean persisted;
 
-    /** Sem janela de silêncio: o último evento completa na hora (vale em teste de um só fluxo). */
     public BackfillStatus(Instant cutoverAt, Clock clock, Path file) {
         this(cutoverAt, clock, file, Duration.ZERO);
     }
@@ -83,7 +73,6 @@ public final class BackfillStatus {
         touch();
     }
 
-    /** Chamado ao processar o evento com {@code source.snapshot=last}. */
     public synchronized void snapshotCompleted() {
         lastSeen = true;
         lastEventAt = clock.instant();

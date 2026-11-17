@@ -47,11 +47,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-/**
- * Do banco legado ao tópico, com Postgres, Kafka e Debezium reais: 10 mil transações espalhadas de 120 dias antes a 10
- * dias depois do corte. Prova SC-002 (nada fora da janela, nada de dado pessoal) e, com {@code -Dfixture.dir=...},
- * grava a fixture da prova do SC-001 no motor (registros produzidos por este serviço e a referência calculada em SQL).
- */
 @Testcontainers
 class TransactionServiceIT {
 
@@ -86,7 +81,6 @@ class TransactionServiceIT {
             .withEnv("STATUS_STORAGE_REPLICATION_FACTOR", "1")
             .waitingFor(Wait.forHttp("/connectors").forStatusCode(200).withStartupTimeout(Duration.ofMinutes(3)));
 
-    /** Igual a infra/connect/transactions-cdc.json do compose. */
     private static final String CONNECTOR = """
             {"connector.class":"io.debezium.connector.postgresql.PostgresConnector","tasks.max":"1",
              "database.hostname":"bank-db","database.port":"5432","database.user":"bank","database.password":"bank","database.dbname":"bank",
@@ -148,7 +142,6 @@ class TransactionServiceIT {
                 HttpResponse.BodyHandlers.ofString()).body();
     }
 
-    /** 2 mil linhas nas 100 contas de referência, o resto em 900 outras; tudo de cutover−120 d a cutover+10 d. */
     private static void seed() throws Exception {
         sql("""
                 INSERT INTO bank.transactions
@@ -163,7 +156,6 @@ class TransactionServiceIT {
                            || '-' || lpad((n %% 100)::text, 2, '0')
                 FROM generate_series(1::bigint, %d) AS n
                 """.formatted(REFERENCE_ACCOUNTS, REFERENCE_ACCOUNTS, CUTOVER_SQL, ROWS - 4));
-        // as quatro bordas: exatamente 90 dias entra, 1 s antes dos 90 dias não, 1 s antes do corte entra, o corte não
         sql("INSERT INTO bank.transactions VALUES "
                 + "('txn_edge_0001','acc_tok_00000001','acc_tok_00000500',5000,'dev_edge0000000001'," + CUTOVER_SQL + " - 90 * 86400 * interval '1 second','Borda Um','111.111.111-11'),"
                 + "('txn_edge_0002','acc_tok_00000001','acc_tok_00000500',5000,'dev_edge0000000001'," + CUTOVER_SQL + " - (90 * 86400 + 1) * interval '1 second','Borda Dois','222.222.222-22'),"
@@ -189,7 +181,6 @@ class TransactionServiceIT {
             while (all.size() < expected && System.nanoTime() < deadline) {
                 consumer.poll(Duration.ofMillis(200)).forEach(all::add);
             }
-            // espera um pouco mais: se vier registro além do esperado, o teste precisa ver
             var extra = System.nanoTime() + Duration.ofSeconds(3).toNanos();
             while (System.nanoTime() < extra) {
                 consumer.poll(Duration.ofMillis(200)).forEach(all::add);
@@ -225,7 +216,6 @@ class TransactionServiceIT {
 
             var records = readAll(expectedIds.size(), Duration.ofMinutes(3));
 
-            // SC-002: exatamente o que está na janela, sem repetição, sem dado pessoal
             var ids = new ArrayList<String>();
             var window = new HistoryWindow(CUTOVER);
             for (var record : records) {
@@ -239,7 +229,6 @@ class TransactionServiceIT {
             assertThat(ids).as("sem repetição").doesNotHaveDuplicates();
             assertThat(new TreeSet<>(ids)).as("os mesmos ids do SQL").isEqualTo(expectedIds);
 
-            // o status: COMPLETED depois da janela de silêncio, com os totais certos
             var statusUrl = "http://localhost:" + statusServer.port() + StatusServer.PATH;
             var body = get(statusUrl);
             for (int i = 0; i < 30 && !body.contains("\"state\":\"COMPLETED\""); i++) {
@@ -259,7 +248,6 @@ class TransactionServiceIT {
         }
     }
 
-    /** Com {@code -Dfixture.dir}: grava o que o motor usa na prova do SC-001 (100 contas de referência). */
     private static void writeFixtureIfRequested(List<ConsumerRecord<String, String>> records) throws Exception {
         var dir = System.getProperty("fixture.dir");
         if (dir == null || dir.isBlank()) {
@@ -277,9 +265,6 @@ class TransactionServiceIT {
         Files.createDirectories(Path.of(dir));
         Files.write(Path.of(dir, "reference-history.jsonl"), lines);
 
-        // a referência em SQL, com a janela alinhada aos buckets de dia UTC do motor (spec 006, plano §8):
-        // para a primeira transação ao vivo, em cutoverAt, o motor soma os 30 dias UTC até o dia do corte (o dia do
-        // corte só tem histórico antes do corte) e o maior valor dos 90 dias UTC.
         var expected = new LinkedHashMap<String, Object>();
         var accounts = new LinkedHashMap<String, Map<String, Long>>();
         for (var account : reference) {

@@ -10,10 +10,6 @@ import java.util.Set;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 
-/**
- * Traduz o evento do Debezium da tabela {@code bank.transactions} nos campos que o histórico aceita. Só lê as colunas
- * permitidas: {@code payer_name} e {@code payer_cpf} nunca são acessadas.
- */
 public final class DebeziumTransactionMapper {
 
     private static final Set<String> OPERATIONS = Set.of("c", "u", "r", "d");

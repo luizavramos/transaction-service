@@ -119,7 +119,6 @@ class BackfillStatusTest {
         assertThat(fresh.snapshot().published()).isZero();
     }
 
-    /** Relógio que anda quando o teste manda. */
     private static final class MutableClock extends Clock {
         private Instant now;
 

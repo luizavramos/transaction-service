@@ -5,10 +5,6 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 
-/**
- * Configuração própria do backfill, lida do ambiente. {@code CUTOVER_AT} não tem padrão: sem ele a janela de 90 dias
- * não existe, e adivinhar o corte produziria histórico que se sobrepõe ao fluxo ao vivo ou deixa um buraco.
- */
 public record BackfillSettings(Instant cutoverAt, int ratePerSecond, int statusPort, Duration completionQuiet) {
 
     static final int DEFAULT_RATE_PER_SECOND = 20_000;
