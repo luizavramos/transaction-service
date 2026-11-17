@@ -1,0 +1,12 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "transaction-service", "version": "0.1.0", "description": "Consome o CDC de transações e faz a carga de 90 dias de histórico. O status do backfill é servido em porta própria (8096); saúde e métricas na 8086, onde fica esta página." },
+  "paths": {
+    "/actuator/health": { "get": { "summary": "Saúde geral", "tags": ["Operação"], "responses": { "200": { "description": "UP", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } } }, "503": { "description": "DOWN ou OUT_OF_SERVICE" } } } },
+    "/actuator/health/liveness": { "get": { "summary": "O processo está vivo", "tags": ["Operação"], "responses": { "200": { "description": "UP" }, "503": { "description": "DOWN" } } } },
+    "/actuator/health/readiness": { "get": { "summary": "Pronto para trabalhar (estado carregado, stream em execução)", "tags": ["Operação"], "responses": { "200": { "description": "UP" }, "503": { "description": "OUT_OF_SERVICE" } } } },
+    "/actuator/prometheus": { "get": { "summary": "Métricas no formato Prometheus", "tags": ["Operação"], "responses": { "200": { "description": "Texto no formato de exposição do Prometheus", "content": { "text/plain": { "schema": { "type": "string" } } } } } } },
+    "/v1/backfill/status": { "get": { "summary": "Estado da carga de histórico (porta própria, 8096 no compose)", "tags": ["Backfill"], "responses": { "200": { "description": "Estado atual", "content": { "application/json": { "schema": { "type": "object", "properties": { "state": { "type": "string", "example": "COMPLETED" }, "cutoverAt": { "type": "string", "format": "date-time" }, "windowStart": { "type": "string", "format": "date-time" }, "published": { "type": "integer" }, "skipped": { "type": "object", "properties": { "invalid_record": { "type": "integer" }, "not_snapshot": { "type": "integer" }, "out_of_window": { "type": "integer" } } }, "malformed": { "type": "integer" }, "completedAt": { "type": "string", "format": "date-time" } } } } } } } } }
+  },
+  "components": { "schemas": { "Health": { "type": "object", "properties": { "status": { "type": "string", "enum": ["UP", "DOWN", "OUT_OF_SERVICE"] } } } } }
+}
