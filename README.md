@@ -8,6 +8,25 @@ cdc.bank.transactions ─► só op=r (snapshot) e occurredAt em [cutoverAt − 
 
 **Estado:** implementado (Fases 1 a 4). Provado com Postgres, Kafka e Debezium reais (10 mil transações, nada fora da janela, nada de dado pessoal) e, no `detection-engine`, contra o cálculo em SQL (ver "O que está provado"). Ensaiado no compose com o motor de pé (limitador a 2 mil/s, reset do motor). Não medido: o limite padrão de 20 mil registros/s contra um motor sob tráfego ao vivo e a latência do motor em ambiente representativo.
 
+## O que engatilha o serviço
+
+O serviço fica sempre rodando e lê o tópico `cdc.bank.transactions`, que o **Debezium** alimenta a partir da tabela `bank.transactions` do banco legado. Ele não consulta o banco: o que o faz agir é a chegada de mensagens nesse tópico.
+
+O Debezium marca cada mensagem com um código de operação, e o serviço só aproveita um deles:
+
+| Código | O que é | O que o serviço faz |
+|---|---|---|
+| `r` | leitura do **snapshot inicial** (a foto da tabela) | publica, se a transação estiver na janela de 90 dias |
+| `c`, `u`, `d` | insert, update e delete feitos **depois** do snapshot | descarta (motivo `not_snapshot`) |
+
+O que dispara a carga, então, é o **snapshot do Debezium**, que acontece quando o conector `transactions-cdc` é registrado (`snapshot.mode: initial`). Depois que o último evento do snapshot passa (`snapshot=last`) e o tópico fica 10 s em silêncio, o estado vira `COMPLETED` e não há mais nada a fazer.
+
+Por isso parece que ele só age ao subir. Se o snapshot já estiver no tópico quando o serviço inicia sem offset gravado, ele lê o tópico desde o começo (o padrão do Kafka Streams, não configurado neste código) e faz a carga naquele momento. O que ele processa é o que já estava no tópico; subir o serviço não pede nada ao banco.
+
+**Por que ignorar o que vem depois do snapshot.** Isto é uma carga inicial, não uma sincronização contínua. Antes do `cutoverAt` o histórico vem do banco legado; depois dele, as transações chegam ao motor ao vivo, pelo `receiver`. Se este serviço também publicasse os inserts contínuos, a mesma transação entraria duas vezes.
+
+**Consequência.** Transações que o banco legado receber depois do snapshot não chegam ao motor por este caminho; só chegam se passarem pelo `receiver`. Para o motor reaprender o histórico (por exemplo, quando ele perdeu o estado), é preciso refazer o snapshot, como descrito em "Refazer a carga (H3)".
+
 ## Configuração
 
 | Variável | Padrão | Para quê |
