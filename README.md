@@ -21,12 +21,6 @@ O Debezium marca cada mensagem com um código de operação, e o serviço só ap
 
 O que dispara a carga, então, é o **snapshot do Debezium**, que acontece quando o conector `transactions-cdc` é registrado (`snapshot.mode: initial`). Depois que o último evento do snapshot passa (`snapshot=last`) e o tópico fica 10 s em silêncio, o estado vira `COMPLETED` e não há mais nada a fazer.
 
-Por isso parece que ele só age ao subir. Se o snapshot já estiver no tópico quando o serviço inicia sem offset gravado, ele lê o tópico desde o começo (o padrão do Kafka Streams, não configurado neste código) e faz a carga naquele momento. O que ele processa é o que já estava no tópico; subir o serviço não pede nada ao banco.
-
-**Por que ignorar o que vem depois do snapshot.** Isto é uma carga inicial, não uma sincronização contínua. Antes do `cutoverAt` o histórico vem do banco legado; depois dele, as transações chegam ao motor ao vivo, pelo `receiver`. Se este serviço também publicasse os inserts contínuos, a mesma transação entraria duas vezes.
-
-**Consequência.** Transações que o banco legado receber depois do snapshot não chegam ao motor por este caminho; só chegam se passarem pelo `receiver`. Para o motor reaprender o histórico (por exemplo, quando ele perdeu o estado), é preciso refazer o snapshot, como descrito em "Refazer a carga (H3)".
-
 ## Configuração
 
 | Variável | Padrão | Para quê |
