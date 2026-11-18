@@ -6,7 +6,7 @@ Carga inicial (**backfill**) de 90 dias de histórico de transações, do banco 
 cdc.bank.transactions ─► só op=r (snapshot) e occurredAt em [cutoverAt − 90 d, cutoverAt) ─► campos permitidos ─► transaction-history-backfill.v1
 ```
 
-**Estado:** implementado (spec 006, Fases 1 a 4). Provado com Postgres, Kafka e Debezium reais (10 mil transações, nada fora da janela, nada de dado pessoal) e, no `detection-engine`, contra o cálculo em SQL (ver "O que está provado"). Ensaiado no compose com o motor de pé (limitador a 2 mil/s, reset do motor). Não medido: o limite padrão de 20 mil registros/s contra um motor sob tráfego ao vivo e a latência do motor em ambiente representativo.
+**Estado:** implementado (Fases 1 a 4). Provado com Postgres, Kafka e Debezium reais (10 mil transações, nada fora da janela, nada de dado pessoal) e, no `detection-engine`, contra o cálculo em SQL (ver "O que está provado"). Ensaiado no compose com o motor de pé (limitador a 2 mil/s, reset do motor). Não medido: o limite padrão de 20 mil registros/s contra um motor sob tráfego ao vivo e a latência do motor em ambiente representativo.
 
 ## Configuração
 
@@ -37,7 +37,7 @@ curl localhost:8096/v1/backfill/status             # RUNNING até o fim do snaps
 
 O status mostra o estado, `cutoverAt`, o início da janela, os totais publicados e os descartados por motivo (`out_of_window`, `not_snapshot`, `invalid_record`) e os eventos ilegíveis. `COMPLETED` exige o último evento do snapshot (`snapshot=last`) **e** 10 s sem nenhum evento novo; um retardatário volta o estado para `RUNNING`. Os totais valem desde a partida do processo; ao completar, o resultado é gravado em `STATE_DIR/backfill-status.json` e relido num reinício.
 
-Métricas (porta `HTTP_PORT`): `backfill_records_published_total`, `backfill_records_skipped_total{reason}` e `backfill_events_malformed_total`. O painel "Carga de histórico (spec 006)" do Grafana mostra o total publicado e a velocidade por motivo.
+Métricas (porta `HTTP_PORT`): `backfill_records_published_total`, `backfill_records_skipped_total{reason}` e `backfill_events_malformed_total`. O painel "Carga de histórico" do Grafana mostra o total publicado e a velocidade por motivo.
 
 ## Refazer a carga (H3)
 
